@@ -1,26 +1,17 @@
 package com.example.practice.models;
 
-public class JwtResponse {
+import java.io.Serializable;
 
-	private String jwtToken;
+public class JwtResponse implements Serializable {
 
-	
+	private static final long serialVersionUID = -8091879091924046844L;
+	private final String jwttoken;
 
-	public JwtResponse() {
-		super();
-		// TODO Auto-generated constructor stub
+	public JwtResponse(String jwttoken) {
+		this.jwttoken = jwttoken;
 	}
 
-	public JwtResponse(String jwtToken) {
-		super();
-		this.jwtToken = jwtToken;
-	}
-
-	public String getJwtToken() {
-		return jwtToken;
-	}
-
-	public void setJwtToken(String jwtToken) {
-		this.jwtToken = jwtToken;
+	public String getToken() {
+		return this.jwttoken;
 	}
 }

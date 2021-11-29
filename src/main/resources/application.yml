@@ -5,5 +5,7 @@ spring:
       database: Salary
       port: 27017
 
-      
-      
+
+
+jwt:
+  secret: javainuse

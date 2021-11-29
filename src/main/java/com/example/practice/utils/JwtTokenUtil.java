@@ -12,12 +12,13 @@ import org.springframework.stereotype.Component;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+
 @Component
-public class JwtUtility implements Serializable {
+public class JwtTokenUtil implements Serializable {
 
 	  private static final long serialVersionUID = -2550185165626007488L;
 
-	    public static final long JWT_TOKEN_VALIDITY = 10 * 60 * 60;
+	    public static final long JWT_TOKEN_VALIDITY = 10 * 60 * 60*10;
 
 	    private String secret = "secret";
 
@@ -54,9 +55,13 @@ public class JwtUtility implements Serializable {
 
 	    private String doGenerateToken(Map<String, Object> claims, String subject) {
 
-	        return Jwts.builder().setClaims(claims).setSubject(subject).setIssuedAt(new Date(System.currentTimeMillis()))
+	        return Jwts.builder()
+					.setClaims(claims)
+					.setSubject(subject)
+					.setIssuedAt(new Date(System.currentTimeMillis()))
 	                .setExpiration(new Date(System.currentTimeMillis() + JWT_TOKEN_VALIDITY * 1000))
-	                .signWith(SignatureAlgorithm.HS512, secret).compact();
+	                .signWith(SignatureAlgorithm.HS512, secret)
+					.compact();
 	    }
 
 	    //validate token
