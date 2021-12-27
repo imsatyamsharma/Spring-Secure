@@ -1,72 +1,143 @@
 package com.example.practice;
 
+import com.example.practice.controller.roleController.RoleRepository;
+import com.example.practice.controller.userController.UserDetailsImpl1;
+import com.example.practice.controller.userController.UserRepository;
+import com.example.practice.models.*;
+import com.example.practice.services.MyUserDetailsService;
 import com.example.practice.utils.JwtTokenUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+//import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.*;
 
-import com.example.practice.models.JwtRequest;
-import com.example.practice.models.JwtResponse;
-import com.example.practice.services.MyUserDetailsService;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Component
 @RestController
 public class HomeController {
 
 
-	@Autowired
-	private AuthenticationManager authenticationManager;
+    @Autowired
+    private AuthenticationManager authenticationManager;
 
-	@Autowired
-	private JwtTokenUtil jwtTokenUtil;
+    @Autowired
+    private JwtTokenUtil jwtTokenUtil;
+    @Autowired
+    private RoleRepository roleRepository;
+    @Autowired
+    private UserRepository userRepository;
 
-	@Autowired
-	private MyUserDetailsService userDetailsService;
+    @Autowired
+    PasswordEncoder encoder;
 
-	//curl --location --request GET 'http://0.0.0.0:8080/home' \
-	//--header 'Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJhZG1pbiIsImV4cCI6MTYzODUzMDcxNCwiaWF0IjoxNjM4MTcwNzE0fQ.KlIaXJ25hdoK30023LrI7h1eihKwtvKzkqO_DgbW2obgxxTlPENsPVsrktGhHiSR0OvgJ1UO5jaGDu3YF0deiQ' \
-	//--header 'Cookie: JSESSIONID=B1A634C792A828936F42B34862A20E22'
-	@GetMapping("/home")
-	public String home() {
-		return "Welcome";
-	}
+    @Autowired
+    private MyUserDetailsService userDetailsService;
 
-	//curl --location --request POST 'http://0.0.0.0:8080/authenticate' \
-	//--header 'Authorization: Basic YWRtaW46cGFzc3dvcmQ=' \
-	//--header 'Content-Type: application/json' \
-	//--header 'Cookie: JSESSIONID=54E3C619F9E7CE7E7D480D92700DA07D' \
-	//--data-raw '{
-	//
-	// "username":"admin",
-	// "password":"password"
-	//}'
-	@RequestMapping(value = "/authenticate", method = RequestMethod.POST)
-	public ResponseEntity<?> createAuthenticationToken(@RequestBody JwtRequest authenticationRequest) throws Exception {
+    @GetMapping("/home")
+    public String home() {
+        return "Welcome";
+    }
 
-		authenticate(authenticationRequest.getUsername(), authenticationRequest.getPassword());
+    Logger logger = LoggerFactory.getLogger(getClass());
 
-		final UserDetails userDetails = userDetailsService
-				.loadUserByUsername(authenticationRequest.getUsername());
+    @RequestMapping(value = "/authenticate", method = RequestMethod.POST)
+    public ResponseEntity<?> createAuthenticationToken(@RequestBody JwtRequest authenticationRequest) throws Exception {
 
-		final String token = jwtTokenUtil.generateToken(userDetails);
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(authenticationRequest.getUsername(),authenticationRequest.getPassword()));
 
-		return ResponseEntity.ok(new JwtResponse(token));
-	}
+        SecurityContextHolder.getContext().setAuthentication(authentication);
 
-	private void authenticate(String username, String password) throws Exception {
-		try {
-			authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(username, password));
-		} catch (DisabledException e) {
-			throw new Exception("USER_DISABLED", e);
-		} catch (BadCredentialsException e) {
-			throw new Exception("INVALID_CREDENTIALS", e);
-		}
-	}
+     //  final UserDetails userDetails = userDetailsService.loadUserByUsername(authenticationRequest.getUsername());
+        final String token = jwtTokenUtil.generateToken(authentication);
+
+        UserDetailsImpl1 userDetail= (UserDetailsImpl1) authentication.getPrincipal();
+        List<String> roles = userDetail.getAuthorities().stream()
+                .map(item -> item.getAuthority())
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(new JwtResponse(token, userDetail.getId(), userDetail.getUsername(),
+                roles));
+
+    }
+
+    @PostMapping("/signup")
+    public ResponseEntity<?> registerUser( @RequestBody SignupRequest signUpRequest) {
+        if (userRepository.existsByUsername(signUpRequest.getUsername())) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(new MessageResponse("Error: Username is already taken!"));
+        }
+
+        User user = new User(signUpRequest.getUsername(),
+                encoder.encode(signUpRequest.getPassword()));
+
+        Set<String> strRoles = signUpRequest.getRole();
+        Set<Role> roles = new HashSet<>();
+
+        if (strRoles == null) {
+            Role userRole = roleRepository.findByName(ERole.ROLE_USER)
+                    .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+            roles.add(userRole);
+        } else {
+            strRoles.forEach(role -> {
+                switch (role) {
+                    case "ADMIN":
+                        Role adminRole = roleRepository.findByName(ERole.ROLE_ADMIN)
+                                .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+                        roles.add(adminRole);
+
+                        break;
+                    default:
+                        Role userRole = roleRepository.findByName(ERole.ROLE_USER)
+                                .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+                        roles.add(userRole);
+                }
+            });
+        }
+
+        user.setRoles(roles);
+        userRepository.save(user);
+
+        return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
+    }
+
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//		if(authenticationRequest.getPassword().equals(userDetails.getPassword())){
+//	     Optional <Role> role = roleRepository.findById(userDetails.getId());
+//
+//	 }
