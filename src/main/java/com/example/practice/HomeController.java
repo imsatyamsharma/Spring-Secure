@@ -60,7 +60,6 @@ public class HomeController {
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-     //  final UserDetails userDetails = userDetailsService.loadUserByUsername(authenticationRequest.getUsername());
         final String token = jwtTokenUtil.generateToken(authentication);
 
         UserDetailsImpl1 userDetail= (UserDetailsImpl1) authentication.getPrincipal();
@@ -114,30 +113,3 @@ public class HomeController {
     }
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//		if(authenticationRequest.getPassword().equals(userDetails.getPassword())){
-//	     Optional <Role> role = roleRepository.findById(userDetails.getId());
-//
-//	 }

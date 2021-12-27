@@ -4,12 +4,7 @@ import com.example.practice.controller.userController.UserDetailsImpl1;
 import io.jsonwebtoken.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
 
 import java.io.Serializable;
@@ -65,11 +60,6 @@ public class JwtTokenUtil implements Serializable {
 				.compact();
 	}
 
-//	public Authentication getAuthentication(String token) {
-//		UserDetails userDetails = this.userDetailsService.loadUserByUsername(getUsernameFromToken(token));
-//		return new UsernamePasswordAuthenticationToken(userDetails, "", userDetails.getAuthorities());
-//	}
-
 
 	public boolean validateJwtToken(String token) {
 		try {
@@ -88,11 +78,6 @@ public class JwtTokenUtil implements Serializable {
 		}
 
 		return false;
-
-		//          public Boolean validateToken(String token) {
-//	        final String username = getUsernameFromToken(token);
-//	        return (username.equals(!isTokenExpired(token)));
-//	    }
 	}
 
 }
