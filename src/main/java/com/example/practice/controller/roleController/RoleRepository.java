@@ -9,37 +9,3 @@ import java.util.Optional;
 public interface RoleRepository extends MongoRepository<Role,String> {
       Optional<Role> findByName(ERole name);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//    @Query("{ 'uid' : ?0 }")
-//    String getEmployeeRolesById(int uid);
-//    {
-//        /// this will fetch data from EmpRoles table where uId is 123
-//
-//
-//        return "role";
-//    }
