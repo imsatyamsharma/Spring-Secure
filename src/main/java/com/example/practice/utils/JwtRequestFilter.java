@@ -1,7 +1,6 @@
 package com.example.practice.utils;
 
 import com.example.practice.services.MyUserDetailsService;
-//import com.example.practice.services.RolesServices;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -58,9 +57,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         if (StringUtils.hasText(headerAuth) && headerAuth.startsWith("Bearer ")) {
             return headerAuth.substring(7, headerAuth.length());
         }
-
         return null;
-
-   }
+    }
 
 }
